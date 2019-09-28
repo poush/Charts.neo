@@ -1,0 +1,25 @@
+{
+  "name": "semantic-react-ga",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "bootstrap": "^4.3.1",
+    "graph-app-kit": "^1.0.0",
+    "neo4j-driver": "^1.5.0",
+    "plotly.js": "^1.49.5",
+    "prop-types": "^15.6.0",
+    "react": "^16.0.0",
+    "react-chart-editor": "latest",
+    "react-dom": "^16.0.0",
+    "react-scripts": "1.0.16",
+    "reactstrap": "^8.0.1",
+    "semantic-ui-css": "^2.2.12",
+    "semantic-ui-react": "^0.76.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  }
+}
