@@ -30,15 +30,7 @@ class ConnectedApp extends Component {
       },
       datalist: [
         {
-          n: "x",
-          v: ""
-        },
-        {
-          n: "y",
-          v: ""
-        },
-        {
-          n: "z",
+          n: "",
           v: ""
         }
       ],
@@ -58,18 +50,23 @@ class ConnectedApp extends Component {
       ]
     };
     this.toggle = this.toggle.bind(this);
-    this.addvar = this.addvar.bind(this);
   }
   createDataSource(data) {
     let obj = {};
-    data.forEach((v, k) => {
-      obj[v["n"]] = v["k"];
+    data.forEach((ob, i) => {
+      obj[ob['n']] = this.cypherQuery(ob['v'])
     });
     return obj;
   }
+
+  cypherQuery(query) {
+    // wip: get the data from neo4j cypher query
+    return query;
+  }
+
   createDataSourceOptions(data) {
     let obj = [];
-    data.forEach((v, k) => {
+    data.forEach((v, i) => {
       obj.push({ value: v["n"], label: v["n"] });
     });
     return obj;
@@ -78,15 +75,35 @@ class ConnectedApp extends Component {
   toggle() {
     this.setState(prevState => ({
       modal: !prevState.modal
-      // dataSource: this.createDataSource(prevState.datalist),
-      // dataSourceOptions: this.createDataSourceOptions(prevState.datalist)
     }));
   }
-  addvar() {
+
+  saveVars = () => {
+    this.setState(prevState => ({
+      modal: !prevState.modal,
+      dataSource: this.createDataSource(prevState.datalist),
+      dataSourceOptions: this.createDataSourceOptions(prevState.datalist)
+    }), 
+    () => {
+      // update data options in callback
+      this.updateDataOptions()
+    })
+
+  }
+
+  addVars = (datalist) => {
     this.setState(state => ({
-      datalist: state.datalist.push({ n: "", v: "" })
+      datalist: datalist
     }));
     console.log(this.state.datalist);
+  }
+
+  addNewVar = () => {
+    this.setState( prevState => {
+      return {
+        datalist: [...prevState.datalist, {n: "", v: ""}]
+      }
+    })
   }
 
   reRunManually = () => {
@@ -94,19 +111,39 @@ class ConnectedApp extends Component {
   };
 
   updateDataOptions = () => {
-    console.log(this.state.dataSources);
+    console.log(this.state.dataSource);
     this.setState({
-      dataSourceOptions: Object.keys(this.state.dataSources).map(name => ({
+      dataSourceOptions: Object.keys(this.state.dataSource).map( name => ({
         value: name,
         label: name
-      }))
-    });
+      })
+    )})
   };
-  handleChange(event) {
-    this.setState({ title: event.target.value });
+
+  handleChange = (event, index) => {
+    console.log('handle change called')
+
+    // dont remove this, this is what keeps this thing working
+    event.persist()
+
+    if(['name', 'query'].includes(event.target.classList[0])) {
+      this.setState((prevState) => {
+        let newDatalist = [...prevState.datalist]
+        if(event.target.classList[0] === 'query') {
+          newDatalist[index]['v'] = event.target.value
+        }
+        else {
+          newDatalist[index]['n'] = event.target.value
+        }
+        return {
+          datalist: newDatalist
+        }
+      })
+    }
   }
 
   render() {
+    let { datalist } = this.state
     return (
       <div className="app">
         <PlotlyEditor
@@ -125,7 +162,7 @@ class ConnectedApp extends Component {
           advancedTraceTypeSelector
         />
         <Button color="danger" onClick={this.toggle}>
-          Set Variables {console.log(this.state.datalist)}
+          Set Variables
         </Button>
         <Modal
           isOpen={this.state.modal}
@@ -134,17 +171,24 @@ class ConnectedApp extends Component {
         >
           <ModalHeader toggle={this.toggle}>Set Variables</ModalHeader>
           <ModalBody>
-            {console.log(this.state)}
-            {this.state.datalist.map((e, k) => {
+            {datalist.map((obj, i) => {
               return (
-                <InputGroup>
+                <InputGroup key={i}>
                   <InputGroupAddon addonType="prepend">
                     <Input
+                      data-id={i}
+                      className="name"
                       placeholder="variable name"
-                      // onChange={this.handleChange.bind(this)}
+                      defaultValue={obj.n}
+                      onChange={(e) => this.handleChange(e, i)}
                     />
                   </InputGroupAddon>
-                  <Input placeholder="query" />
+                  <Input
+                    data-id={i}
+                    className="query"
+                    defaultValue={obj.v}
+                    onChange={(e) => this.handleChange(e, i)}
+                    placeholder="query" />
                 </InputGroup>
               );
             })}
@@ -153,11 +197,11 @@ class ConnectedApp extends Component {
           <ModalFooter>
             <Button
               color="primary"
-              // onClick={this.addvar}
+              onClick={this.addNewVar}
             >
               Add Variable
             </Button>{" "}
-            <Button color="secondary" onClick={this.toggle}>
+            <Button color="secondary" onClick={this.saveVars}>
               Save
             </Button>
           </ModalFooter>
